@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 const DuplicatedUsernameError = require('../errors/duplicatedUsernameError');
+const InvalidUsernameOrPasswordError = require('../errors/invalidUsernameOrPasswordError');
 const WeakPasswordError = require('../errors/weakPasswordError');
 const User = require('../models/user');
+const jwtUtils = require('../utils/jwt');
 
 /**
  * Creates a new user on the database
@@ -126,6 +128,38 @@ function isPasswordStrongEnough(password) {
     && isPasswordLongEnough(password);
 }
 
+/**
+ * Authorize a user
+ * @param {string} username The username of the user
+ * @param {string} password The password of the user
+ * @returns {Promise<string>} The JWT to use as authentication
+ */
+function login(username, password) {
+  return new Promise((resolve, reject) => {
+    User
+      .findOne({ username })
+      .then((user) => {
+        if (!user) {
+          reject(new InvalidUsernameOrPasswordError());
+          return;
+        }
+
+        const { salt, password: hash } = user;
+        const generatedHash = generatePasswordHash(password, salt);
+        if (hash !== generatedHash) {
+          reject(new InvalidUsernameOrPasswordError());
+          return;
+        }
+
+        jwtUtils
+          .create({ username })
+          .then(token => resolve(token))
+          .catch(error => reject(error));
+      });
+  });
+}
+
 module.exports = {
   create,
+  login,
 };

@@ -9,7 +9,7 @@ const User = require('../models/user');
  * @param {string} password The password of the user
  */
 function create(username, password) {
-  return doesUsernameAlreadyExist()
+  return doesUsernameAlreadyExist(username)
     .then(usernameExists => new Promise((resolve, reject) => {
       if (usernameExists) {
         reject(new DuplicatedUsernameError(username));

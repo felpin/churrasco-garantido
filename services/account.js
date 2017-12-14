@@ -6,6 +6,13 @@ const User = require('../models/user');
 const jwtUtils = require('../utils/jwt');
 
 /**
+ * The data related to an account
+ * @typedef {Object} AccountData
+ * @property {string} username The username of a user
+ * @property {string} password The password of a user
+ */
+
+/**
  * Creates a new user on the database
  * @param {string} username The username of the user
  * @param {string} password The password of the user
@@ -129,32 +136,119 @@ function isPasswordStrongEnough(password) {
 }
 
 /**
+ * Checks if a user is authorized (username and password matches)
+ * @param {string} username The username of the user
+ * @param {string} password The password of the user
+ * @returns {Promise<boolean>} If the user is authorized
+ */
+function isUserAuthorized(username, password) {
+  return new Promise((resolve) => {
+    User
+      .findOne({ username })
+      .then((user) => {
+        if (!user) {
+          return resolve(false);
+        }
+
+        const { salt, password: hash } = user;
+        const generatedHash = generatePasswordHash(password, salt);
+        if (hash !== generatedHash) {
+          return resolve(false);
+        }
+
+        return resolve(true);
+      });
+  });
+}
+
+/**
  * Authorize a user
  * @param {string} username The username of the user
  * @param {string} password The password of the user
  * @returns {Promise<string>} The JWT to use as authentication
  */
 function login(username, password) {
+  return isUserAuthorized(username, password)
+    .then((isAuthorized) => {
+      if (!isAuthorized) {
+        throw new InvalidUsernameOrPasswordError();
+      }
+
+      return jwtUtils.create({ username });
+    });
+}
+
+/**
+ * Updates an account
+ * @param {string} username The username of the user
+ * @param {string} password The password of the user
+ * @param {AccountData} newAccountData The values of the account to update
+ * @returns {Promise} The user updated model
+ */
+function update(username, password, newAccountData) {
+  return isUserAuthorized(username, password)
+    .then((isAuthorized) => {
+      if (!isAuthorized) {
+        throw new InvalidUsernameOrPasswordError();
+      }
+
+      return User
+        .findOne({ username })
+        .then((user) => {
+          const { username: newUsername, password: newPassword } = newAccountData;
+
+          return Promise
+            .all([updateUsername(user, username, newUsername), updatePassword(user, newPassword)])
+            .then(() => user.save());
+        });
+    });
+}
+
+/**
+ * Updates a user model with a new password
+ * @param {Object} user The user model
+ * @param {string} newPassword The password to replace the current
+ * @returns {Promise} Resolved when the password is set
+ */
+function updatePassword(user, newPassword) {
   return new Promise((resolve, reject) => {
-    User
-      .findOne({ username })
-      .then((user) => {
-        if (!user) {
-          reject(new InvalidUsernameOrPasswordError());
-          return;
+    if (!newPassword) {
+      return resolve();
+    }
+
+    if (!isPasswordStrongEnough(newPassword)) {
+      return reject(new WeakPasswordError());
+    }
+
+    const { salt } = user;
+    const newPasswordHash = generatePasswordHash(newPassword, salt);
+
+    user.set({ password: newPasswordHash });
+    return resolve();
+  });
+}
+
+/**
+ * Updates a user model with a new username
+ * @param {Object} user The user model
+ * @param {string} oldUsername The current username
+ * @param {string} newUsername The username to replace the current
+ * @returns {Promise} Resolved when the username is set
+ */
+function updateUsername(user, oldUsername, newUsername) {
+  return new Promise((resolve, reject) => {
+    if (!newUsername || oldUsername === newUsername) {
+      return resolve();
+    }
+
+    return doesUsernameAlreadyExist(newUsername)
+      .then((isDuplicated) => {
+        if (isDuplicated) {
+          return reject(new DuplicatedUsernameError(newUsername));
         }
 
-        const { salt, password: hash } = user;
-        const generatedHash = generatePasswordHash(password, salt);
-        if (hash !== generatedHash) {
-          reject(new InvalidUsernameOrPasswordError());
-          return;
-        }
-
-        jwtUtils
-          .create({ username })
-          .then(token => resolve(token))
-          .catch(error => reject(error));
+        user.set({ username: newUsername });
+        return resolve();
       });
   });
 }
@@ -162,4 +256,5 @@ function login(username, password) {
 module.exports = {
   create,
   login,
+  update,
 };

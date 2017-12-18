@@ -13,6 +13,13 @@ const Order = require('../models/order');
  */
 
 /**
+ * An order
+ * @typedef {Object} Order
+ * @param {number} code The unique code of the order
+ * @param {Product[]} products The products of the order
+ */
+
+/**
  * Creates an order
  * @param {string} userId The user's id
  * @param {string} cnpj The CNPJ of the company (without separators)
@@ -82,6 +89,18 @@ function exclude(userId, code) {
 }
 
 /**
+ * Get all the orders of a company
+ * @param {string} userId The user's id
+ * @param {string} cnpj The CNPJ of the company to retrieve the orders
+ * @returns {Promise<Order[]>} The orders of the company
+ */
+function getAll(userId, cnpj) {
+  return Order
+    .find({ user: userId, cnpj, active: true })
+    .then(orders => orders.map(order => ({ code: order._id, products: order.products })));
+}
+
+/**
  * Get the next code
  * @returns {Promise<number>} The next order's code
  */
@@ -108,4 +127,5 @@ function nextOrderCode() {
 module.exports = {
   create,
   exclude,
+  getAll,
 };

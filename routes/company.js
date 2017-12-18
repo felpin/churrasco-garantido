@@ -4,6 +4,9 @@ const Joi = require('joi');
 const DuplicatedCnpjError = require('../errors/duplicatedCnpjError');
 const InvalidCnpjError = require('../errors/invalidCnpjError');
 const service = require('../services/company');
+const orderService = require('../services/order');
+
+const NUMBERS_IN_CNPJ = 14;
 
 routerWithAuthentication.get('/', (req, res) => {
   const { id } = res.locals.tokenPayload;
@@ -14,9 +17,23 @@ routerWithAuthentication.get('/', (req, res) => {
     .catch(() => res.sendStatus(500));
 });
 
-routerWithAuthentication.post('/', (req, res) => {
-  const NUMBERS_IN_CNPJ = 14;
+routerWithAuthentication.get('/:cnpj/orders', (req, res) => {
+  const cnpjSchema = Joi.string().length(NUMBERS_IN_CNPJ).required();
 
+  Joi
+    .validate(req.params.cnpj, cnpjSchema)
+    .then((cnpj) => {
+      const { id } = res.locals.tokenPayload;
+
+      orderService
+        .getAll(id, cnpj)
+        .then(orders => res.status(200).send(orders))
+        .catch(() => res.sendStatus(500));
+    })
+    .catch(error => res.status(422).send(error));
+});
+
+routerWithAuthentication.post('/', (req, res) => {
   const bodySchema = Joi.object({
     name: Joi.string().required(),
     cnpj: Joi.string().length(NUMBERS_IN_CNPJ).required(),

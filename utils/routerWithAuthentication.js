@@ -94,4 +94,5 @@ module.exports = router => ({
   get: configureAuthentication(router, 'get'),
   post: configureAuthentication(router, 'post'),
   put: configureAuthentication(router, 'put'),
+  delete: configureAuthentication(router, 'delete'),
 });

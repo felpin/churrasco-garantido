@@ -17,7 +17,7 @@ router.post('/create', (req, res) => {
     .then(({ username, password }) => {
       service
         .create(username, password)
-        .then(() => res.sendStatus(204))
+        .then(() => res.sendStatus(201))
         .catch(error => res.status(422).send(error));
     })
     .catch(error => res.status(422).send(error));

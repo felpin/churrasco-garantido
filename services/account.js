@@ -174,8 +174,9 @@ function login(username, password) {
         throw new InvalidUsernameOrPasswordError();
       }
 
-      return jwtUtils.create({ username });
-    });
+      return User.findOne({ username });
+    })
+    .then(({ id }) => jwtUtils.create({ id, username }));
 }
 
 /**

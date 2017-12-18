@@ -86,4 +86,5 @@ function isCnpjValid(cnpj) {
 module.exports = {
   create,
   getAll,
+  isCnpjUniqueToUser,
 };

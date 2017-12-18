@@ -13,6 +13,10 @@ const orderSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     index: true,
   },
+  active: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const orderModel = mongoose.model('Order', orderSchema);

@@ -1,6 +1,7 @@
 const companyService = require('./company');
 const productService = require('./product');
 const InexistentCnpjError = require('../errors/inexistentCnpjError');
+const InexistentOrderError = require('../errors/inexistentOrderError');
 const InexistentProductError = require('../errors/inexistentProductError');
 const Order = require('../models/order');
 
@@ -54,6 +55,33 @@ function create(userId, cnpj, products) {
 }
 
 /**
+ * Deletes an order
+ * @param {string} userId The user's id
+ * @param {string} code The code of the order
+ * @returns {Promise} Resolved when the order is deleted
+ */
+function exclude(userId, code) {
+  return new Promise((resolve, reject) => {
+    Order
+      .findOne({ _id: code, active: true, user: userId })
+      .then((order) => {
+        if (!order) {
+          reject(new InexistentOrderError(code));
+          return;
+        }
+
+        order.set({ active: false });
+
+        order
+          .save()
+          .then(() => resolve())
+          .catch(error => reject(error));
+      })
+      .catch(error => reject(error));
+  });
+}
+
+/**
  * Get the next code
  * @returns {Promise<number>} The next order's code
  */
@@ -79,4 +107,5 @@ function nextOrderCode() {
 
 module.exports = {
   create,
+  exclude,
 };

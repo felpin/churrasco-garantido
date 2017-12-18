@@ -4,6 +4,13 @@ const InvalidCnpjError = require('../errors/invalidCnpjError');
 const Company = require('../models/company');
 
 /**
+ * A user's company
+ * @typedef {Object} Company
+ * @param {string} name The name of the company
+ * @param {string} cnpj The CNPJ of the company (without separations)
+ */
+
+/**
  * Creates a new company to the user
  * @param {string} userId The user's id
  * @param {string} name The name of the company
@@ -39,6 +46,17 @@ function create(userId, name, cnpj) {
 }
 
 /**
+ * Get the companies related to a user
+ * @param {string} userId The id of the user
+ * @returns {Promise<Company[]>} The companies related to the user
+ */
+function getAll(userId) {
+  return Company
+    .find({ user: userId }, 'name cnpj')
+    .then(companies => companies.map(({ name, cnpj }) => ({ name, cnpj })));
+}
+
+/**
  * Check if a CNPJ is already declared for a user
  * @param {string} userId The id of the user
  * @param {string} cnpj The CNPJ to validate
@@ -67,4 +85,5 @@ function isCnpjValid(cnpj) {
 
 module.exports = {
   create,
+  getAll,
 };

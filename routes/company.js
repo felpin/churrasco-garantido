@@ -5,6 +5,15 @@ const DuplicatedCnpjError = require('../errors/duplicatedCnpjError');
 const InvalidCnpjError = require('../errors/invalidCnpjError');
 const service = require('../services/company');
 
+routerWithAuthentication.get('/', (req, res) => {
+  const { id } = res.locals.tokenPayload;
+
+  service
+    .getAll(id)
+    .then(companies => res.status(200).send(companies))
+    .catch(() => res.sendStatus(500));
+});
+
 routerWithAuthentication.post('/', (req, res) => {
   const NUMBERS_IN_CNPJ = 14;
 

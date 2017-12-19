@@ -105,3 +105,25 @@ Para criar um pedido, deve-se fazer uma requisição **POST** para https://local
 Deve haver pelo menos um item no pedido.
 
 Se o pedido for criado com sucesso, uma resposta HTTP 201 será retornada.
+
+### Excluindo pedidos
+
+Para excluir um pedido, deve-se fazer uma requisição **DELETE** para https://localhost/orders/:code onde ":code" é o código do pedido
+
+Havendo sucesso na requisição, será retornado HTTP 204.
+
+### Buscando pedidos
+
+Para buscar os pedido de uma determinada empresa, deve-se fazer uma requisição **GET** para https://localhost/companies/:cnpj/orders onde ":cnpj" é o CNPJ da empresa
+
+Havendo sucesso na requisição, será retornado HTTP 200 contendo um array com a seguinte estrutura:
+
+```javascript
+{
+  "code": "(number) o código do pedido",
+  "products": [{
+    "name": "(string) o nome do produto",
+    "quantity": "(number) a quantidade do produto"
+  }]
+}
+```

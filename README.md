@@ -127,3 +127,19 @@ Havendo sucesso na requisição, será retornado HTTP 200 contendo um array com 
   }]
 }
 ```
+
+### Obtendo um resumo das empresas e pedidos
+
+Para buscar um resumo das empresas e seus pedidos, deve-se fazer uma requisição **GET** para https://localhost/summary
+
+Havendo sucesso na requisição, será retornado HTTP 200 contendo um array com a seguinte estrutura:
+
+```javascript
+{
+  [
+    "name": "(string) o nome da empresa",
+    "cnpj": "(string) o CNPJ da empresa (sem separações)",
+    "orders": "(number) a quantidade de pedidos desta empresa"
+  ]
+}
+```

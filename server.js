@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const express = require('express');
 const fs = require('fs');
 const https = require('https');
@@ -23,6 +24,7 @@ function whenDatabaseConnectionOpens() {
   const app = express();
 
   app.use(bodyParser.json());
+  app.use(cors());
   app.use('/', router);
 
   const httpsOptions = {

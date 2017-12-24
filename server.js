@@ -3,8 +3,7 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
-const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const mongoose = require('mongoose');
 const router = require('./routes/router');
 
@@ -27,15 +26,10 @@ function whenDatabaseConnectionOpens() {
   app.use(cors());
   app.use('/', router);
 
-  const httpsOptions = {
-    cert: fs.readFileSync(process.env.SERVER_SSL_CRT),
-    key: fs.readFileSync(process.env.SERVER_SSL_KEY),
-  };
+  const PORT = process.env.PORT || 3000;
 
-  const PORT = process.env.SERVER_PORT || 3000;
-
-  https
-    .createServer(httpsOptions, app)
+  http
+    .createServer(app)
     .listen(PORT, () => {
       console.log(`***** LISTENING ON PORT ${PORT} *****`);
     });
